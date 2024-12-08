@@ -9,16 +9,20 @@ public class TileLoader : MonoBehaviour
 	static TileMap tileMap;
 
 	private TerrainRenderer terrainRenderer;
+	private BuildingGenerator buildingGenerator;
 
 	int size = 100;
 	float gridDx = 1f;
 	float gridDY = 1f;
 
 	// Start is called before the first frame update
-	void Start()
+	async void Start()
 	{
 		terrainRenderer = new TerrainRenderer(this.spriteRenderer,TileLoader.tileMap);
 		terrainRenderer.Render();
+
+		buildingGenerator = new BuildingGenerator(this.spriteRenderer,TileLoader.tileMap);
+		await buildingGenerator.Render();
 	}
 
 	// Update is called once per frame

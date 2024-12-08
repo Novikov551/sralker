@@ -1,6 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 
+
 namespace HelloWorld
 {
     public class HelloWorldPlayer : NetworkBehaviour

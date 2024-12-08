@@ -1,8 +1,8 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
+using OsmChunkLoader;
+using OsmSharp;
+using System.Threading.Tasks;
 
 public class BuildingGenerator: AbstractRenderer
 {
@@ -10,9 +10,11 @@ public class BuildingGenerator: AbstractRenderer
 		this.tileMap = tileMap;
 		var testTile = tileMap.getTileByName("grassed_ground_1");
 		this.gridMultiplier = testTile.sprite.bounds.size.x;
+		chunkLoader = new ChunkLoader(48.615718f, 44.431930f);
 	}
 	
 	public SpriteRenderer spriteRenderer;
+	public ChunkLoader chunkLoader;
 
 	private ArrayList renderedSprites = new ArrayList();
 
@@ -21,48 +23,38 @@ public class BuildingGenerator: AbstractRenderer
 	int size = 100;
 	float gridMultiplier = 1f;
 
-	private float PerlinCoef1 = 0.2f;
-	private float PerlinGridMultiplier1 = 0.1f;
-
-	private float PerlinCoef2 = 0.2f;
-	private float PerlinGridMultiplier2 = 0.4f;
-
-	private float PerlinCoef3 = 0.3f;
-	private float PerlinGridMultiplier3 = 0.2f;
-
 	// Start is called before the first frame update
-	public void Render()
+	async public Task Render()
 	{
-		var r1 = UnityEngine.Random.Range(-100f,50f);
-		var r2 = UnityEngine.Random.Range(100f,150f);
-		var r3 = UnityEngine.Random.Range(-200f,-100f);
-		
-		for(int x = 0; x<size;x++){
-			for(int y = 0; y<size; y++){
+		var chunk = await this.chunkLoader.GetChunk(0f,0f);
 
-				var perlinValue1 = Mathf.PerlinNoise((x*PerlinGridMultiplier1)+r1,y*PerlinGridMultiplier1) * PerlinCoef1;
-				var perlinValue2 = Mathf.PerlinNoise((x*PerlinGridMultiplier2+r2),y*PerlinGridMultiplier2) * PerlinCoef2;
-				var perlinValue3 = Mathf.PerlinNoise((x*PerlinGridMultiplier3)+r3,y*PerlinGridMultiplier1) * PerlinCoef3;
+		foreach(var building in chunk){
+			var buildingPivot = new GameObject();
+			
+			foreach(var tile in building.Tiles){
+				string tileName = "";
+				if(tile.Type == Models.TileType.AppartmentCorner)
+					tileName = "apartment_corner_1";
+				if(tile.Type == Models.TileType.AppartmentCenter)
+					tileName = "apartment_center_1";
+				if(tile.Type == Models.TileType.AppartmentLedge)
+					tileName = "apartment_ledge_1";
+				if(tile.Type == Models.TileType.AppartmentSide)
+					tileName = "apartment_border_1";
+				if(tile.Type == Models.TileType.AppartmentSingle)
+					tileName = "apartment_ledge_1";
 
-				if(perlinValue1>0.1) {
-					renderedSprites.Add(this.RenderTile(tileMap.getTileByName("bushes_1"),new Vector2(x*gridMultiplier,y*gridMultiplier)));
-					continue;
-				}
+				var sprite = this.RenderTile(tileMap.getTileByName(tileName),new Vector2(tile.Coord.GlobalX*gridMultiplier,tile.Coord.GlobalY*gridMultiplier),buildingPivot);
 
-				if(perlinValue2>0.1) {
-					renderedSprites.Add(this.RenderTile(tileMap.getTileByName("grassed_ground_1"),new Vector2(x*gridMultiplier,y*gridMultiplier)));
-					continue;
-				}
-
-				if(perlinValue3>0.1) {
-					renderedSprites.Add(this.RenderTile(tileMap.getTileByName("bushes_2"),new Vector2(x*gridMultiplier,y*gridMultiplier)));
-					continue;
-				}
-
-				renderedSprites.Add(this.RenderTile(tileMap.getTileByName("grassed_ground_2"),new Vector2(x*gridMultiplier,y*gridMultiplier)));
+				sprite.transform.Rotate(0,0,tile.Angle);
 
 			}
+
 		}
+
+
+		
+
 		
 	}
 
